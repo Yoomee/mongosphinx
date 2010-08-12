@@ -14,10 +14,10 @@ spec = Gem::Specification.new do |spec|
 
   spec.platform = Gem::Platform::RUBY
   spec.name = 'mongosphinx'
-  spec.homepage = 'http://github.com/burke/mongosphinx'
-  spec.version = '0.1'
-  spec.author = 'Burke Libbey'
-  spec.email = 'burke@burkelibbey.org'
+  spec.homepage = 'http://github.com/yoomee/mongosphinx'
+  spec.version = '0.1.3'
+  spec.author = 'Matt Atkins'
+  spec.email = 'matt@yoomee.com'
   spec.summary = 'A full text indexing extension for MongoDB using Sphinx.'
   spec.files = files
   spec.require_path = '.'
