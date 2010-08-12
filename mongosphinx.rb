@@ -10,7 +10,6 @@ rescue LoadError; end
 require 'mongo_mapper'
 require 'riddle'
 
-
 module MongoSphinx
   if (match = __FILE__.match(/mongosphinx-([0-9.-]*)/))
     VERSION = match[1]

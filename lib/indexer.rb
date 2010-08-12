@@ -74,49 +74,6 @@ module MongoSphinx #:nodoc:
 
       attr_reader :xml_footer
 
-      # Streams xml of all objects in a klass to the stdout. This makes sure you can process large collections.
-      #
-      # Options:
-      #  attributes (required) - The attributes that are put in the sphinx xml.
-      #  id_attribute (optional) - The attribute to use as id while indexing (should be integer).
-      #                            If none is specified we'll create a useless one.
-      #
-      # Example:
-      #  MongoSphinx::Indexer::XMLDocset.stream(Document, :attributes => %w(title content))
-      # This will create an XML stream to stdout. 
-      #
-      # Configure in your sphinx.conf like
-      #  xmlpipe_command = ./script/runner "MongoSphinx::Indexer::XMLDocset.stream(Document, :attributes => %w(title content))"
-      #
-      def self.stream(klass, options = {})
-        STDOUT.sync = true # Make sure we really stream..
-        attributes = options[:attributes]
-        id_attribute = options[:id_attribute]
-        # raise ArgumentError, 'Missing id_attribute' if id_attribute.nil? # optional
-        raise ArgumentError, 'Missing attributes' if attributes.nil?
-
-        puts '<?xml version="1.0" encoding="utf-8"?>'
-
-        puts '<sphinx:docset>'
-
-        # Schema
-        puts '<sphinx:schema>'
-        klass.fulltext_keys.each do |key, value|
-          puts "<sphinx:field name=\"#{key}\"/>"
-        end
-        # FIXME: What is this attribute?
-        puts '<sphinx:field name="classname"/>'
-        puts '<sphinx:attr name="csphinx-class" type="multi"/>'
-        puts '</sphinx:schema>'
-
-        cursor = Mongo::Cursor.new(klass.collection)
-        while document_hash = cursor.next_document
-          XMLDoc.stream_for_hash(document_hash, klass, attributes, id_attribute)
-        end
-
-        puts '</sphinx:docset>'
-      end
-
       # Creates a XMLDocset object from the provided data. It defines a
       # superset of all fields of the classes to index objects for. The class
       # names are collected from the provided objects as well.
@@ -200,28 +157,6 @@ module MongoSphinx #:nodoc:
 
       attr_reader :xml
 
-      def self.stream_for_hash(hash, klass, attributes, id_attribute = nil)
-        sphinx_compatible_id = hash[id_attribute].to_i unless id_attribute.nil?
-        sphinx_compatible_id ||= hash['_id'].to_s.hex % (2**64) # FIXME. This creates a bogus unique id.
-        
-        class_name = klass.to_s
-
-        puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
-        
-        # FIXME: Should we include this?
-        puts '<csphinx-class>'
-        puts MongoSphinx::MultiAttribute.encode(class_name)
-        puts '</csphinx-class>'
-        puts "<classname>#{class_name}</classname>"
-        
-        attributes.each do |key|
-          value = hash[key]
-          puts "<#{key}><![CDATA[[#{value}]]></#{key}>"
-        end
-
-        puts '</sphinx:document>'
-      end
-
       # Creates a XMLDoc object from the provided CouchRest object.
       #
       # Parameters:
@@ -231,8 +166,11 @@ module MongoSphinx #:nodoc:
       def self.from_object(object)
         raise ArgumentError, 'Missing object' if object.nil?
         raise ArgumentError, 'No compatible ID' if (id = object.sphinx_id).nil?
-
-        return new(id, object.class.to_s, object.fulltext_attributes)
+        debugger
+        fulltext_attrs = object.attributes.reject do |k, v|
+          not (object.fulltext_keys.include? k.intern)
+        end
+        return new(id, object.class.to_s, fulltext_attrs)
       end
 
       # Creates a XMLDoc object from the provided ID, class name and data.
@@ -250,7 +188,7 @@ module MongoSphinx #:nodoc:
         xml = "<sphinx:document id=\"#{id}\">"
 
         xml << '<csphinx-class>'
-        xml << MongoSphinx::MultiAttribute.encode(class_name)
+        xml << class_name#MongoSphinx::MultiAttribute.encode(class_name)
         xml << '</csphinx-class>'
         xml << "<classname>#{class_name}</classname>"
 

@@ -110,7 +110,7 @@ module MongoMapper # :nodoc:
           # Sphinx. If an ID already exists, we try to match it with our 
           # Schema and cowardly ignore if not.
 
-          # before_save :save_callback # FIXME: Disabled since it did not work for me.
+          before_save :save_callback
 
         end 
       
@@ -140,7 +140,6 @@ module MongoMapper # :nodoc:
           else
             client = Riddle::Client.new(fulltext_opts[:server],
                      fulltext_opts[:port])
-
             query = query + " @classname #{self}"
           end
 
@@ -162,15 +161,19 @@ module MongoMapper # :nodoc:
           result = client.query(query)
 
           #TODO
-          if result and result[:status] == 0 and (matches = result[:matches])
+          if result and result[:status] == 0 and !(matches = result[:matches]).empty?
+            debugger
             classname = nil
             ids = matches.collect do |row|
               classname = MongoSphinx::MultiAttribute.decode(row[:attributes]['csphinx-class'])
-              (classname + '-' + row[:doc].to_s) rescue nil
+              (row[:doc].to_i) rescue nil
             end.compact
-
             return ids if options[:raw]
-            return Object.const_get(classname).find(ids)
+            objects = []
+            ids.each do |id|
+              objects << self.find_by_sphinx_id(id)
+            end
+            return objects
           else
             return []
           end
