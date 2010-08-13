@@ -5,15 +5,15 @@ supporting MongoMapper to automatically index objects in Sphinx. It tries to
 act as transparent as possible: Just an additional method in MongoMapper
 and some Sphinx configuration are needed to get going.
 
+
 == Prerequisites
 
 MongoSphinx needs gems MongoMapper and Riddle as well as a running Sphinx
 and a MongoDB installation.
 
-  sudo gem sources -a http://gems.github.com  # Only needed once!
   sudo gem install riddle
   sudo gem install mongomapper
-  sudo gem install burke-mongosphinx
+  sudo gem install yoomee-mongosphinx
 
 No additional configuraton is needed for interfacing with MongoDB: Setup is
 done when MongoMapper is able to talk to the MongoDB server.
@@ -49,16 +49,9 @@ This is a sample configuration for a single "main" index:
 
 Notice the line "xmlpipe_command =". This is what the indexer runs to generate 
 its input. You can change this to whatever works best for you, but I set it up as 
-a rake task, with the following in `lib/tasks/sphinx.rake` .
+a rake task, with the following in `lib/tasks/sphinx.rake`.
 
-Here, :fields is a list of fields to export. Performance tends to suffer if you export
-everything, so you'll probably want to just list the fields you're indexing.
-
-  namespace :sphinx do
-    task :genxml => :environment do
-      puts MongoSphinx::Indexer::XMLDocset.new(Food.all(:fields => 'name')).to_s
-    end
-  end
+See the Downloads for a more comprehensive list of rake tasks, a slight modification on those written be M E Patterson at http://blog.digimonkey.com/2010/01/mongosphinx-with-mongodb-and-mongomapper/
 
 == Models
 
