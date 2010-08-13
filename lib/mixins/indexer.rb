@@ -162,7 +162,6 @@ module MongoMapper # :nodoc:
 
           #TODO
           if result and result[:status] == 0 and !(matches = result[:matches]).empty?
-            debugger
             classname = nil
             ids = matches.collect do |row|
               classname = MongoSphinx::MultiAttribute.decode(row[:attributes]['csphinx-class'])

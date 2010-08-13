@@ -99,7 +99,6 @@ module MongoSphinx #:nodoc:
             object = row
           elsif row.kind_of? Hash
             row = row['value'] if row['classname'].nil?
-
             if row and (class_name = row['classname'])
               object = eval(class_name.to_s).new(row) rescue nil
             end
@@ -166,7 +165,6 @@ module MongoSphinx #:nodoc:
       def self.from_object(object)
         raise ArgumentError, 'Missing object' if object.nil?
         raise ArgumentError, 'No compatible ID' if (id = object.sphinx_id).nil?
-        debugger
         fulltext_attrs = object.attributes.reject do |k, v|
           not (object.fulltext_keys.include? k.intern)
         end
@@ -188,7 +186,7 @@ module MongoSphinx #:nodoc:
         xml = "<sphinx:document id=\"#{id}\">"
 
         xml << '<csphinx-class>'
-        xml << class_name#MongoSphinx::MultiAttribute.encode(class_name)
+        xml << MongoSphinx::MultiAttribute.encode(class_name)
         xml << '</csphinx-class>'
         xml << "<classname>#{class_name}</classname>"
 
