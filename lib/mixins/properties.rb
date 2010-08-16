@@ -51,14 +51,13 @@ module MongoMapper # :nodoc:
       end
 
       # Returns the numeric part of the document ID (compatible to Sphinx).
-
-      def sphinx_id
-        if (match = self.id.match(/#{self.class}-([0-9]+)/))
-          return match[1]
-        else
-          return nil
-        end
-      end
+      # def sphinx_id
+      #   if (match = self.id.match(/#{self.class}-([0-9]+)/))
+      #     return match[1]
+      #   else
+      #     return nil
+      #   end
+      # end
     end
   end
 end
