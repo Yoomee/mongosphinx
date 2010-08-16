@@ -101,7 +101,10 @@ module MongoMapper # :nodoc:
           # gem. 
 
           cattr_accessor :fulltext_keys 
-          cattr_accessor :fulltext_opts 
+          cattr_accessor :fulltext_opts          
+          cattr_accessor :has_delta_index
+          
+          self.has_delta_index = opts[:delta] || false
 
           self.fulltext_keys = keys
           self.fulltext_opts = opts
@@ -111,8 +114,40 @@ module MongoMapper # :nodoc:
           # Schema and cowardly ignore if not.
 
           before_save :save_callback
+          before_create :increment_sphinx_id
+          
+          key :sphinx_id, Integer
+          alias_attribute :_sphinx_id, :sphinx_id
 
-        end 
+          if opts[:delta]
+            before_save :set_delta            
+            after_save :rebuild_delta_index
+            key :delta, Boolean, :default => true
+            define_method(:rebuild_delta_index) do
+              Rails.logger.info("rebuild_delta_index = #{self.class.to_s.underscore}_delta")
+              Process.fork {`rake mongosphinx:rebuild index=#{self.class.to_s.underscore}_delta`}
+            end
+            define_method(:set_delta) do
+              self.delta = true
+            end
+          end
+
+          (class << self; self; end).module_eval do
+            define_method :xml_for_sphinx_core do
+              puts MongoSphinx::Indexer::XMLDocset.new(self.all(:fields => keys << "sphinx_id")).to_s
+            end
+            if opts[:delta]
+              define_method :xml_for_sphinx_delta do
+                puts MongoSphinx::Indexer::XMLDocset.new(self.all(:fields => keys << "sphinx_id", :delta => true)).to_s
+              end
+            end
+          end
+
+          define_method(:increment_sphinx_id) do
+            self.sphinx_id = ((last_id = self.class.sort(:sphinx_id).last.try(:sphinx_id)) ? last_id + 1 : 1)
+          end
+
+        end
       
         # Searches for an object of this model class (e.g. Post, Comment) and
         # the requested query string. The query string may contain any query 
@@ -142,7 +177,7 @@ module MongoMapper # :nodoc:
                      fulltext_opts[:port])
             query = query + " @classname #{self}"
           end
-
+          
           client.match_mode = options[:match_mode] || :extended
 
           if (limit = options[:limit])
@@ -157,20 +192,24 @@ module MongoMapper # :nodoc:
             client.sort_mode = :extended
             client.sort_by = sort_by
           end
+          
+          index_names = "*"
+          debugger
+          if self != Document
+            index_names = "#{self.to_s.underscore}_core"
+            index_names += " #{self.to_s.underscore}_delta" if self.has_delta_index
+          end
+          debugger
+          result = client.query(query, index_names)
 
-          result = client.query(query)
-
-          #TODO
-          if result and result[:status] == 0 and !(matches = result[:matches]).empty?
-            classname = nil
-            ids = matches.collect do |row|
-              classname = MongoSphinx::MultiAttribute.decode(row[:attributes]['csphinx-class'])
-              (row[:doc].to_i) rescue nil
+          if result and result[:status] == 0 and !(sphinx_matches = result[:matches]).empty?
+            matches = sphinx_matches.collect do |row|
+              {:classname => MongoSphinx::MultiAttribute.decode(row[:attributes]['csphinx-class']), :id => (row[:doc].to_i)} rescue nil
             end.compact
-            return ids if options[:raw]
+            return matches if options[:raw]
             objects = []
-            ids.each do |id|
-              objects << self.find_by_sphinx_id(id)
+            matches.each do |match|
+              objects << match[:classname].constantize.find_by_sphinx_id(match[:id])
             end
             return objects
           else
