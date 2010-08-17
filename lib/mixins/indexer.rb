@@ -109,10 +109,6 @@ module MongoMapper # :nodoc:
           self.fulltext_keys = keys
           self.fulltext_opts = opts
 
-          # Overwrite setting of new ID to do something compatible with
-          # Sphinx. If an ID already exists, we try to match it with our 
-          # Schema and cowardly ignore if not.
-
           before_save :save_callback
           before_create :increment_sphinx_id
           
@@ -194,12 +190,10 @@ module MongoMapper # :nodoc:
           end
           
           index_names = "*"
-          debugger
           if self != Document
             index_names = "#{self.to_s.underscore}_core"
             index_names += " #{self.to_s.underscore}_delta" if self.has_delta_index
           end
-          debugger
           result = client.query(query, index_names)
 
           if result and result[:status] == 0 and !(sphinx_matches = result[:matches]).empty?

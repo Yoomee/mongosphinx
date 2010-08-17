@@ -5,6 +5,9 @@ supporting MongoMapper to automatically index objects in Sphinx. It tries to
 act as transparent as possible: Just an additional method in MongoMapper
 and some Sphinx configuration are needed to get going.
 
+== Yoomee Mongosphinx
+Forked from burke/mongosphinx. Fixes some bugs and adds some other functionality
+e.g. delta indexing.
 
 == Prerequisites
 
