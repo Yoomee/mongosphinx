@@ -109,6 +109,10 @@ module MongoMapper # :nodoc:
           self.fulltext_keys = keys
           self.fulltext_opts = opts
 
+          # Overwrite setting of new ID to do something compatible with
+          # Sphinx. If an ID already exists, we try to match it with our 
+          # Schema and cowardly ignore if not.
+
           before_save :save_callback
           before_create :increment_sphinx_id
           
@@ -169,8 +173,7 @@ module MongoMapper # :nodoc:
           if self == Document
             client = Riddle::Client.new
           else
-            client = Riddle::Client.new(fulltext_opts[:server],
-                     fulltext_opts[:port])
+            client = Riddle::Client.new(fulltext_opts[:server], fulltext_opts[:port])
             query = query + " @classname #{self}"
           end
           
@@ -189,11 +192,14 @@ module MongoMapper # :nodoc:
             client.sort_by = sort_by
           end
           
-          index_names = "*"
-          if self != Document
-            index_names = "#{self.to_s.underscore}_core"
-            index_names += " #{self.to_s.underscore}_delta" if self.has_delta_index
+          index_names = ""
+          class_names = (self == Document ? options[:classes] || [] : [self.to_s])
+          class_names.each do |class_name|
+            class_name = class_name.to_s
+            index_names += "#{class_name.underscore}_core "
+            index_names += "#{class_name.underscore}_delta " if class_name.camelize.constantize.has_delta_index
           end
+          index_names = "*" if index_names.blank?
           result = client.query(query, index_names)
 
           if result and result[:status] == 0 and !(sphinx_matches = result[:matches]).empty?
