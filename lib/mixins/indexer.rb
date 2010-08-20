@@ -103,6 +103,9 @@ module MongoMapper # :nodoc:
           cattr_accessor :fulltext_keys 
           cattr_accessor :fulltext_opts          
           cattr_accessor :has_delta_index
+
+          attr_accessor :skip_delta_index
+          alias_method :skip_delta_index?, :skip_delta_index
           
           self.has_delta_index = opts[:delta] || false
 
@@ -124,8 +127,7 @@ module MongoMapper # :nodoc:
             after_save :rebuild_delta_index
             key :delta, Boolean, :default => true
             define_method(:rebuild_delta_index) do
-              Rails.logger.info("rebuild_delta_index = #{self.class.to_s.underscore}_delta")
-              Process.fork {`rake mongosphinx:rebuild index=#{self.class.to_s.underscore}_delta`}
+              self.class::reindex_delta unless self.skip_delta_index?
             end
             define_method(:set_delta) do
               self.delta = true
@@ -136,9 +138,17 @@ module MongoMapper # :nodoc:
             define_method :xml_for_sphinx_core do
               puts MongoSphinx::Indexer::XMLDocset.new(self.all(:fields => keys << "sphinx_id")).to_s
             end
+            define_method :reindex_core do
+              Rails.logger.info("reindexing #{self.to_s.underscore}_core")
+              Process.fork {`rake mongosphinx:rebuild index=#{self.to_s.underscore}_core`}
+            end
             if opts[:delta]
               define_method :xml_for_sphinx_delta do
                 puts MongoSphinx::Indexer::XMLDocset.new(self.all(:fields => keys << "sphinx_id", :delta => true)).to_s
+              end
+              define_method :reindex_delta do
+                Rails.logger.info("reindexing #{self.to_s.underscore}_delta")
+                Process.fork {`rake mongosphinx:rebuild index=#{self.to_s.underscore}_delta`}
               end
             end
           end
