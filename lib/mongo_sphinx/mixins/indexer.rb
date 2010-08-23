@@ -140,7 +140,7 @@ module MongoMapper # :nodoc:
             end
             define_method :reindex_core do
               Rails.logger.info("reindexing #{self.to_s.underscore}_core")
-              Process.fork {`rake mongosphinx:rebuild index=#{self.to_s.underscore}_core`}
+              Process.fork {`rake mongo_sphinx:rebuild index=#{self.to_s.underscore}_core`}
             end
             if opts[:delta]
               define_method :xml_for_sphinx_delta do
@@ -148,7 +148,7 @@ module MongoMapper # :nodoc:
               end
               define_method :reindex_delta do
                 Rails.logger.info("reindexing #{self.to_s.underscore}_delta")
-                Process.fork {`rake mongosphinx:rebuild index=#{self.to_s.underscore}_delta`}
+                Process.fork {`rake mongo_sphinx:rebuild index=#{self.to_s.underscore}_delta`}
               end
             end
           end

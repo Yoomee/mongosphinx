@@ -7,13 +7,13 @@ require 'rake/gempackagetask'
 require 'find'
 
 spec = Gem::Specification.new do |spec|
-  files = FileList['README.rdoc', 'mongosphinx.rb', 'tests/*.rb'].to_a
+  files = FileList['README.rdoc', 'mongo_sphinx.rb', 'tests/*.rb'].to_a
 
   Find.find('lib') { |path|
     files << path if not File.stat(path).directory? }
 
   spec.platform = Gem::Platform::RUBY
-  spec.name = 'yoomee-mongosphinx'
+  spec.name = 'yoomee-mongo_sphinx'
   spec.homepage = 'http://github.com/yoomee/mongosphinx'
   spec.version = '0.1.5'
   spec.author = 'Matt Atkins'
@@ -49,12 +49,12 @@ task :doc do
 
   puts 'Create rdoc documentation from the code'
   puts `(rdoc --exclude pkg --exclude tmp \
-          --all  --title "MongoSphinx" README.rdoc lib mongosphinx.rb) 1>&2`
+          --all  --title "MongoSphinx" README.rdoc lib mongo_sphinx.rb) 1>&2`
 end
 
-desc 'Update the mongosphinx.gemspec file with new snapshot of files to bundle'
+desc 'Update the mongo_sphinx.gemspec file with new snapshot of files to bundle'
 task :gemspecs do
-  puts 'Update the mongosphinx.gemspec file with new snapshot of files to bundle.'
+  puts 'Update the mongo_sphinx.gemspec file with new snapshot of files to bundle.'
 
   # !!Warning: We can't use spec.to_ruby as this generates executable code
   # which would break Github gem generation...
@@ -80,5 +80,5 @@ Gem::Specification.new do |spec|
 end
 EOF
 
-  File.open('mongosphinx.gemspec', 'w').write(template)
+  File.open('mongo_sphinx.gemspec', 'w').write(template)
 end
