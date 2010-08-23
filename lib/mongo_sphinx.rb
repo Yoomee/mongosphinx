@@ -18,11 +18,13 @@ module MongoSphinx
   end
   
   # Check if Sphinx is running.
-  #
+  
   def self.sphinx_running?
     !!sphinx_pid && pid_active?(sphinx_pid)
   end
 
+  # Get the Sphinx pid if the pid file exists.
+  
   def self.sphinx_pid
     if File.exists?(MongoSphinx::Configuration.instance.pid_file)
       File.read(MongoSphinx::Configuration.instance.pid_file)[/\d+/]

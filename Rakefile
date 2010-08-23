@@ -7,7 +7,7 @@ require 'rake/gempackagetask'
 require 'find'
 
 spec = Gem::Specification.new do |spec|
-  files = FileList['README.rdoc', 'mongo_sphinx.rb', 'tests/*.rb'].to_a
+  files = FileList['README.rdoc', 'tests/*.rb'].to_a
 
   Find.find('lib') { |path|
     files << path if not File.stat(path).directory? }
@@ -49,7 +49,7 @@ task :doc do
 
   puts 'Create rdoc documentation from the code'
   puts `(rdoc --exclude pkg --exclude tmp \
-          --all  --title "MongoSphinx" README.rdoc lib mongo_sphinx.rb) 1>&2`
+          --all  --title "MongoSphinx" README.rdoc lib) 1>&2`
 end
 
 desc 'Update the mongo_sphinx.gemspec file with new snapshot of files to bundle'
