@@ -49,31 +49,11 @@ module MongoSphinx
   class Configuration
     include Singleton
 
-    SourceOptions = %w( mysql_connect_flags mysql_ssl_cert mysql_ssl_key
-    mysql_ssl_ca sql_range_step sql_query_pre sql_query_post 
-    sql_query_killlist sql_ranged_throttle sql_query_post_index unpack_zlib
-    unpack_mysqlcompress unpack_mysqlcompress_maxsize )
-
-    IndexOptions  = %w( charset_table charset_type charset_dictpath docinfo
-    enable_star exceptions html_index_attrs html_remove_elements html_strip
-    index_exact_words ignore_chars inplace_docinfo_gap inplace_enable
-    inplace_hit_gap inplace_reloc_factor inplace_write_factor min_infix_len
-    min_prefix_len min_stemming_len min_word_len mlock morphology ngram_chars
-    ngram_len ondisk_dict overshort_step phrase_boundary phrase_boundary_step
-    preopen stopwords stopwords_step wordforms )
-
-    CustomOptions = %w( disable_range )
-
-    attr_accessor :searchd_file_path, :allow_star, :database_yml_file,:app_root, :model_directories, :delayed_job_priority, :indexed_models
-
-    attr_accessor :source_options, :index_options
+    attr_accessor :searchd_file_path, :allow_star,:app_root, :delayed_job_priority
     attr_accessor :version
 
     attr_reader :environment, :configuration, :controller
 
-    # Load in the configuration settings - this will look for config/sphinx.yml
-    # and parse it according to the current environment.
-    # 
     def initialize(app_root = Dir.pwd)
       self.reset
     end
@@ -102,11 +82,8 @@ module MongoSphinx
 
       self.address              = "127.0.0.1"
       self.port                 = 9312
-      # self.database_yml_file    = "#{self.app_root}/config/database.yml"
       self.searchd_file_path    = "#{self.app_root}/db/mongo_sphinx/#{environment}"
       self.allow_star           = false
-      # self.model_directories    = ["#{app_root}/app/models/"] +
-      #        Dir.glob("#{app_root}/vendor/plugins/*/app/models/")
       self.delayed_job_priority = 0
       self.indexed_models       = []
 
@@ -116,7 +93,6 @@ module MongoSphinx
       }
 
       self.version = nil
-      parse_config
       self.version ||= @controller.sphinx_version
 
       self
@@ -138,122 +114,84 @@ module MongoSphinx
       self.class.environment
     end
 
-  def address
-    @address
-  end
+    def address
+      @address
+    end
 
-  def address=(address)
-    @address = address
-    @configuration.searchd.address = address
-  end
+    def address=(address)
+      @address = address
+      @configuration.searchd.address = address
+    end
 
-  def port
-    @port
-  end
+    def port
+      @port
+    end
 
-  def port=(port)
-    @port = port
-    @configuration.searchd.port = port
-  end
+    def port=(port)
+      @port = port
+      @configuration.searchd.port = port
+    end
 
-  def pid_file
-    @configuration.searchd.pid_file
-  end
+    def pid_file
+      @configuration.searchd.pid_file
+    end
 
-  def pid_file=(pid_file)
-    @configuration.searchd.pid_file = pid_file
-  end
+    def pid_file=(pid_file)
+      @configuration.searchd.pid_file = pid_file
+    end
 
-  def searchd_log_file
-    @configuration.searchd.log
-  end
+    def searchd_log_file
+      @configuration.searchd.log
+    end
 
-  def searchd_log_file=(file)
-    @configuration.searchd.log = file
-  end
+    def searchd_log_file=(file)
+      @configuration.searchd.log = file
+    end
 
-  def query_log_file
-    @configuration.searchd.query_log
-  end
+    def query_log_file
+      @configuration.searchd.query_log
+    end
 
-  def query_log_file=(file)
-    @configuration.searchd.query_log = file
-  end
+    def query_log_file=(file)
+      @configuration.searchd.query_log = file
+    end
 
-  def config_file
-    @controller.path
-  end
+    def config_file
+      @controller.path
+    end
 
-  def config_file=(file)
-    @controller.path = file
-  end
+    def config_file=(file)
+      @controller.path = file
+    end
 
-  def bin_path
-    @controller.bin_path
-  end
+    def bin_path
+      @controller.bin_path
+    end
 
-  def bin_path=(path)
-    @controller.bin_path = path
-  end
+    def bin_path=(path)
+      @controller.bin_path = path
+    end
 
-  def searchd_binary_name
-    @controller.searchd_binary_name
-  end
+    def searchd_binary_name
+      @controller.searchd_binary_name
+    end
 
-  def searchd_binary_name=(name)
-    @controller.searchd_binary_name = name
-  end
+    def searchd_binary_name=(name)
+      @controller.searchd_binary_name = name
+    end
 
-  def indexer_binary_name
-    @controller.indexer_binary_name
-  end
+    def indexer_binary_name
+      @controller.indexer_binary_name
+    end
 
-  def indexer_binary_name=(name)
-    @controller.indexer_binary_name = name
-  end
+    def indexer_binary_name=(name)
+      @controller.indexer_binary_name = name
+    end
 
-  def client
-    client = Riddle::Client.new address, port
-    client.max_matches = configuration.searchd.max_matches || 1000
-    client
-  end
-
-  private
-
-  # Parse the config/sphinx.yml file - if it exists - then use the attribute
-  # accessors to set the appropriate values. Nothing too clever.
-  # 
-  def parse_config
-    path = "#{app_root}/config/sphinx.yml"
-    return unless File.exists?(path)
-
-    conf = YAML::load(ERB.new(IO.read(path)).result)[environment]
-
-    conf.each do |key,value|
-      self.send("#{key}=", value) if self.respond_to?("#{key}=")
-
-      set_sphinx_setting self.source_options, key, value, SourceOptions
-      set_sphinx_setting self.index_options,  key, value, IndexOptions
-      set_sphinx_setting self.index_options,  key, value, CustomOptions
-      set_sphinx_setting @configuration.searchd, key, value
-      set_sphinx_setting @configuration.indexer, key, value
-    end unless conf.nil?
-
-    self.bin_path += '/' unless self.bin_path.blank?
-
-    if self.allow_star
-      self.index_options[:enable_star]    = true
-      self.index_options[:min_prefix_len] = 1
+    def client
+      client = Riddle::Client.new address, port
+      client.max_matches = configuration.searchd.max_matches || 1000
+      client
     end
   end
-
-  def set_sphinx_setting(object, key, value, allowed = {})
-    if object.is_a?(Hash)
-      object[key.to_sym] = value if allowed.include?(key.to_s)
-    else
-      object.send("#{key}=", value) if object.respond_to?("#{key}")
-      send("#{key}=", value) if self.respond_to?("#{key}")
-    end
-  end
-end
 end
