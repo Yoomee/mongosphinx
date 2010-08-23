@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.author = "Matt Atkins"
   spec.email = "matt@yoomee.com"
   spec.summary = "A full text indexing extension for MongoDB using Sphinx."
-  spec.files = ["README.rdoc", "lib/mongo_sphinx.rb", "lib/multi_attribute.rb", "lib/mixins/properties.rb", "lib/mixins/indexer.rb", "lib/indexer.rb"]
+  spec.files = ["README.rdoc", "lib/mongo_sphinx.rb", "lib/mongo_sphinx/tasks.rb","lib/mongo_sphinx/configuration.rb","lib/mongo_sphinx/multi_attribute.rb", "lib/mongo_sphinx/mixins/properties.rb", "lib/mongo_sphinx/mixins/indexer.rb", "lib/mongo_sphinx/indexer.rb"]
   spec.require_path = "."
   spec.has_rdoc = true
   spec.executables = []
