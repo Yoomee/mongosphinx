@@ -69,10 +69,10 @@ namespace :mongo_sphinx do
   desc "Index data for Sphinx using Mongo Sphinx's settings"
   task :index => :app_env do
     config = MongoSphinx::Configuration.instance
-    unless ENV["INDEX_ONLY"] == "true"
-      puts "Generating Configuration to #{config.config_file}"
-      config.build
-    end
+    # unless ENV["INDEX_ONLY"] == "true"
+    #   puts "Generating Configuration to #{config.config_file}"
+    #   config.build
+    # end
     
     FileUtils.mkdir_p config.searchd_file_path
     config.controller.index :verbose => true

@@ -51,7 +51,9 @@ module MongoSphinx
 
     attr_accessor :searchd_file_path, :allow_star,:app_root, :delayed_job_priority
     attr_accessor :version
-
+    
+    attr_accessor :source_options, :index_options
+    
     attr_reader :environment, :configuration, :controller
 
     def initialize(app_root = Dir.pwd)
@@ -85,8 +87,6 @@ module MongoSphinx
       self.searchd_file_path    = "#{self.app_root}/db/mongo_sphinx/#{environment}"
       self.allow_star           = false
       self.delayed_job_priority = 0
-      self.indexed_models       = []
-
       self.source_options  = {}
       self.index_options   = {
         :charset_type => "utf-8"
