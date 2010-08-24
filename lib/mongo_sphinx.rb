@@ -32,6 +32,15 @@ module MongoSphinx
       nil
     end
   end
+  
+  def self.pid_active?(pid)
+    !!Process.kill(0, pid.to_i)
+  rescue Errno::EPERM => e
+    true
+  rescue Exception => e
+    false
+  end
+  
 end
 
 require 'mongo_sphinx/multi_attribute'

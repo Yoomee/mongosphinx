@@ -107,6 +107,9 @@ module MongoMapper # :nodoc:
           attr_accessor :skip_delta_index
           alias_method :skip_delta_index?, :skip_delta_index
           
+          attr_accessor :skip_set_delta
+          alias_method :skip_set_delta?, :skip_set_delta
+          
           self.has_delta_index = opts[:delta] || false
 
           self.fulltext_keys = keys
@@ -130,7 +133,7 @@ module MongoMapper # :nodoc:
               self.class::reindex_delta unless self.skip_delta_index?
             end
             define_method(:set_delta) do
-              self.delta = true
+              self.delta = true unless self.skip_set_delta?
             end
           end
 
@@ -209,6 +212,7 @@ module MongoMapper # :nodoc:
             index_names += "#{class_name.underscore}_core "
             index_names += "#{class_name.underscore}_delta " if class_name.camelize.constantize.has_delta_index
           end
+          debugger
           index_names = "*" if index_names.blank?
           result = client.query(query, index_names)
 

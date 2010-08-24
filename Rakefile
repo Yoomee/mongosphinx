@@ -13,9 +13,9 @@ spec = Gem::Specification.new do |spec|
     files << path if not File.stat(path).directory? }
 
   spec.platform = Gem::Platform::RUBY
-  spec.name = 'yoomee-mongo_sphinx'
+  spec.name = 'yoomee-mongosphinx'
   spec.homepage = 'http://github.com/yoomee/mongosphinx'
-  spec.version = '0.1.6'
+  spec.version = '0.1.8'
   spec.author = 'Matt Atkins'
   spec.email = 'matt@yoomee.com'
   spec.summary = 'A full text indexing extension for MongoDB using Sphinx.'
