@@ -22,7 +22,7 @@ namespace :mongo_sphinx do
   
   desc "Stop if running, then start a Sphinx searchd daemon using Mongo Sphinx's settings"
   task :running_start => :app_env do
-    Rake::Task["mongo_sphinx:stop"].invoke if sphinx_running?
+    Rake::Task["mongo_sphinx:stop"].invoke if MongoSphinx.sphinx_running?
     Rake::Task["mongo_sphinx:start"].invoke
   end
   
@@ -31,13 +31,13 @@ namespace :mongo_sphinx do
     config = MongoSphinx::Configuration.instance
     
     FileUtils.mkdir_p config.searchd_file_path
-    raise RuntimeError, "searchd is already running." if sphinx_running?
+    raise RuntimeError, "searchd is already running." if MongoSphinx.sphinx_running?
     
     Dir["#{config.searchd_file_path}/*.spl"].each { |file| File.delete(file) }
     
     config.controller.start
     
-    if sphinx_running?
+    if MongoSphinx.sphinx_running?
       puts "Started successfully (pid #{sphinx_pid})."
     else
       puts "Failed to start searchd daemon. Check #{config.searchd_log_file}"
@@ -46,7 +46,7 @@ namespace :mongo_sphinx do
   
   desc "Stop Sphinx using Mongo Sphinx's settings"
   task :stop => :app_env do
-    unless sphinx_running?
+    unless MongoSphinx.sphinx_running?
       puts "searchd is not running"
     else
       config = MongoSphinx::Configuration.instance
@@ -87,7 +87,7 @@ namespace :mongo_sphinx do
   
   desc "Stop Sphinx (if it's running), rebuild the indexes, and start Sphinx"
   task :rebuild => :app_env do
-    Rake::Task["mongo_sphinx:stop"].invoke if sphinx_running?
+    Rake::Task["mongo_sphinx:stop"].invoke if MongoSphinx.sphinx_running?
     Rake::Task["mongo_sphinx:index"].invoke
     Rake::Task["mongo_sphinx:start"].invoke
   end
