@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.platform = "ruby"
   spec.name = "yoomee-mongosphinx"
   spec.homepage = "http://github.com/yoomee/mongosphinx"
-  spec.version = "0.2"
+  spec.version = "0.2.4"
   spec.author = "Matt Atkins"
   spec.email = "matt@yoomee.com"
   spec.summary = "A full text indexing extension for MongoDB using Sphinx."

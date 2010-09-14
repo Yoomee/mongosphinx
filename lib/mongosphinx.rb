@@ -3,7 +3,6 @@
 #
 # This file contains the includes implementing this library. Have a look at
 # the README.rdoc as a starting point.
-
 begin
   require 'rubygems'
 rescue LoadError; end
@@ -63,10 +62,21 @@ module MongoMapper # :nodoc:
         include MongoMapper::Mixins::Indexer
         include MongoMapper::Mixins::Properties
       end
+      
       module ClassMethods
         include MongoMapper::Mixins::Indexer::ClassMethods
       end
+      
     end
   
   end
+  
+  module Document
+    
+    # For global indexing
+    include MongoMapper::Mixins::Indexer
+    
+  end
+  
 end
+  
