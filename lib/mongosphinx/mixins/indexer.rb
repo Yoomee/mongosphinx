@@ -130,10 +130,17 @@ module MongoMapper # :nodoc:
             after_save :rebuild_delta_index
             key :delta, Boolean, :default => true
             define_method(:rebuild_delta_index) do
-              self.class::reindex_delta unless self.skip_delta_index?
+              if !self.skip_delta_index? && fulltext_keys_changed?
+                self.class::reindex_delta
+              end
             end
             define_method(:set_delta) do
-              self.delta = true unless self.skip_set_delta?
+              if !self.skip_set_delta? && fulltext_keys_changed?
+                self.delta = true
+              end
+            end            
+            define_method(:fulltext_keys_changed?) do
+              !(changed & fulltext_keys.collect(&:to_s)).empty?
             end
           end
 
